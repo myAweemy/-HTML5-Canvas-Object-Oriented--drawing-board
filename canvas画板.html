@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>canvas</title>
+<style type="text/css">
+*{margin: 0;padding: 0;}
+#canvasWrap{width: 1004px;height: 404px;margin: 100px auto;}
+#canvas{border: 2px solid #999;float: left;}
+#canvasWrap #setting{width: 148px;height: 400px;border: 2px solid #999;border-left: none; float: right;background-color: #999;}
+#setting>div{border-bottom: 2px dotted #fff;overflow: hidden;padding: 10px 0;}
+#setting h3{margin-left: 5px;font-size: 18px;color: #fff;margin-bottom: 3px;text-transform:uppercase;}
+#setting a{display: block;float: left; width: 20px;height: 20px;margin: 5px;border-radius: 10px;}
+#Thickness a{line-height: 25px;line-height: 25px;}
+#Thickness a span{margin: 0 auto;position: relative;}
+#Thickness>a span{display: block; width: 10px;height: 10px;background-color: #000;border-radius: 5px;}
+#Thickness>a+a span{display: block; width: 15px;height: 15px;background-color: #000;border-radius: 8px;}
+#Thickness>a+a+a span{display: block; width: 20px;height: 20px;background-color: #000;border-radius: 10px;}
+#style a{display: block; float: none;width: auto; height: 20px;line-height: 20px; margin: 8px 10px; border-radius:2px 20px 4px 2px; text-align: center; text-decoration: none; color: white; font-size: 15px;font-weight: bold;background-color: #0ff;}
+.active{border: 2px dotted #fff;}
+</style>
+<script type="text/javascript">
+window.onload = function(){
+	new Paint();
+};	
+function Paint(){
+	var _this = this;
+	this.colors = Array('#0f0','#f00','#00f');//控制颜色按钮的颜色值，不是在结构中写死的
+	this.thickness = Array(2,4,8);//控制笔画粗细的按钮，单位是像素，笔画粗细的表示是写死的，但是具体的值是可以更改的
+	this.styles = Array('free','no-name');//控制笔画粗细的按钮，单位是像素，笔画粗细的表示是写死的，但是具体的值是可以更改的
+	this.canvas = document.getElementById('canvas');
+	this.context = canvas.getContext("2d");
+	this.isdrawing = this.styles[0];//正在绘图的开关，默认关闭，每次按下鼠标左键时打开，每次鼠标抬起后关闭
+	this.nowStyle = 'free';//画笔风格名称
+	this.nowColor = this.colors[0];
+	this.nowThickness = this.thickness[0];
+	this.dSetColor = document.getElementById('color');//颜色选择区域
+	this.btnOfColor = this.dSetColor.getElementsByTagName('a');//选择颜色的按钮
+	this.btnOfColor[0].className = 'active';//初始第一个颜色按钮为选中状态
+	this.dSetThickness = document.getElementById('Thickness');//笔画粗细选择区域
+	this.btnOfThickness = this.dSetThickness.getElementsByTagName('a');//笔画粗细选择按钮
+	this.inBtnOfThickness = new Array();//笔画粗细选择按钮内包裹的span元素
+	for (var i = 0; i < this.btnOfThickness.length; i++) {//获取笔画粗细选择按钮内包裹的span元素
+		this.inBtnOfThickness.push(this.btnOfThickness[i].getElementsByTagName('span')[0]);
+	}
+	this.inBtnOfThickness[0].className = 'active';//初始第一个笔画粗细按钮为选中状态
+	this.dSetStyle = document.getElementById('style');//风格选择区域
+	this.btnOfStyle = this.dSetStyle.getElementsByTagName('a');//选择风格的按钮
+	this.btnOfStyle[0].className = 'active';
+
+	this.initColor();//初始化每个颜色按钮的背景色
+	this.changeColor();//改变颜色
+	this.changeThickness();//改变粗细
+	this.changeStyle();
+	this.canvas.onmousedown = function(ev){//鼠标按下调用开始绘图函数
+		_this.start(ev);		
+	};
+	//this.canvas.onmouseout = function(){_this.stop;};//鼠标离开画布就结束绘图
+} 	
+
+Paint.prototype.initColor = function() {//初始化颜色选项
+	for (var i = 0; i < this.btnOfColor.length; i++) {
+		this.btnOfColor[i].style.backgroundColor = this.colors[i];
+	}
+}	
+Paint.prototype.initActive = function(arrayOfObj) {//初始化选中效果
+	for (var i = 0; i < arrayOfObj.length; i++) {//注意！！！！不要用this.arrayOfObj.length，即不要this了，别马虎忘了this的作用！！！！！
+		arrayOfObj[i].className ='';//注意！！！！不要用this.arrayOfObj.length了，即不要this了，别马虎忘了this的作用！！！！！
+	}
+}
+Paint.prototype.changeColor = function() {
+	var _this = this;
+	for (var i = 0; i < this.btnOfColor.length; i++) {
+		this.btnOfColor[i].index = i;//设置索引，指向对应的<a>元素，方便使用时取出
+		this.btnOfColor[i].onclick =  function(){
+			_this.nowColor = _this.colors[this.index];
+			//先将所有按钮（包括现在被点击的）设置为没有被选中的状态，下面将当前按钮设置为选中状态
+			_this.initActive(_this.btnOfColor);
+			this.className = 'active';//将当前的按钮设置为被选中状态
+		};
+	}
+}	
+Paint.prototype.changeThickness = function() {
+	var _this = this;
+	for (var i = 0; i < this.btnOfThickness.length; i++) {
+		this.btnOfThickness[i].index = i;//设置索引，指向对应的<a>元素，方便使用时取出
+		this.btnOfThickness[i].onclick =  function(){
+			_this.nowThickness = _this.thickness[this.index];
+			//先将所有按钮（包括现在被点击的）设置为没有被选中的状态，下面将被点击的这个按钮设置为选中状态
+			_this.initActive(_this.inBtnOfThickness);
+			_this.inBtnOfThickness[this.index].className = 'active';//将当前的按钮设置为被选中状态
+		};
+	}
+}	
+Paint.prototype.changeStyle = function() {
+	var _this = this;
+	for (var i = 0; i < this.btnOfStyle.length; i++) {
+		this.btnOfStyle[i].index = i;//设置索引，指向对应的<a>元素，方便使用时取出
+		this.btnOfStyle[i].onclick =  function(){
+			_this.nowStyle = _this.styles[this.index];
+			//先将所有按钮（包括现在被点击的）设置为没有被选中的状态，下面将被点击的这个按钮设置为选中状态
+			_this.initActive(_this.btnOfStyle);
+			_this.btnOfStyle[this.index].className = 'active';//将当前的按钮设置为被选中状态
+		};
+	}
+}	
+Paint.prototype.start = function(ev) {//获取当前鼠标位置和初始化画笔
+	var event = ev||event;
+	var _this = this;
+	this.context.beginPath();
+	this.context.strokeStyle = this.nowColor;
+	this.context.fillStyle = this.nowColor;
+	this.context.lineWidth = this.nowThickness;
+	this.isdrawing = true;//将开始绘图的开关打开
+	this.context.moveTo(event.pageX - canvas.offsetLeft,event.pageY - canvas.offsetTop);//初始化画笔位置到开始绘图的点
+	/*依据事件调用各自对应函数*/
+	this.canvas.onmousemove = function(ev){
+		_this.drawingFree(ev);		
+	};
+	this.canvas.onmouseup = function(ev){
+		_this.stop();		
+	};
+	this.canvas.onmouseout = function(){
+		_this.stop();
+	};
+}
+Paint.prototype.drawingFree = function(ev) {
+	var event = ev||event;
+	if (this.isdrawing && this.nowStyle == 'no-name') {//大片不规则形状，名字还没想好...
+		this.context.arc(event.pageX - this.canvas.offsetLeft,event.pageY - this.canvas.offsetTop,1,0,2*Math.PI);
+		this.context.stroke();
+		this.context.fill();
+	}
+	if (this.isdrawing && this.nowStyle == 'free') {//以细小直线的形式
+		this.context.lineTo(event.pageX - this.canvas.offsetLeft,event.pageY - this.canvas.offsetTop);
+		this.context.stroke();
+	}
+}
+Paint.prototype.stop = function() {
+	this.isdrawing = false;
+}
+</script>
+</head>
+<body>
+<div id="canvasWrap">
+	<canvas id="canvas" width="850px" height="400px"></canvas>
+	<div id="setting">
+		<div id="color">
+			<h3>COLOR</h3>
+			<a href="javascript:"></a>
+			<a href="javascript:"></a>
+			<a href="javascript:"></a>
+		</div>
+		<div id="Thickness">
+			<h3>THICKNESS</h3>
+			<a href="javascript:"><span></span></a>
+			<a href="javascript:"><span></span></a>
+			<a href="javascript:"><span></span></a>
+		</div>
+		<div id="style">
+			<h3>STYlE</h3>
+			<a href="javascript:">freestyle</a>
+			<a href="javascript:">no-name</a>
+		</div>		
+		
+	</div>
+</div>
+</body>
+</html>
