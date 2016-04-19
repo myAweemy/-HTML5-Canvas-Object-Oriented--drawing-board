@@ -64,8 +64,8 @@ Paint.prototype.initColor = function() {//初始化颜色选项
 	}
 }	
 Paint.prototype.initActive = function(arrayOfObj) {//初始化选中效果
-	for (var i = 0; i < arrayOfObj.length; i++) {//注意！！！！不要用this.arrayOfObj.length，即不要this了，别马虎忘了this的作用！！！！！
-		arrayOfObj[i].className ='';//注意！！！！不要用this.arrayOfObj.length了，即不要this了，别马虎忘了this的作用！！！！！
+	for (var i = 0; i < arrayOfObj.length; i++) {
+		arrayOfObj[i].className ='';
 	}
 }
 Paint.prototype.changeColor = function() {
@@ -127,7 +127,7 @@ Paint.prototype.start = function(ev) {//获取当前鼠标位置和初始化画�
 Paint.prototype.drawingFree = function(ev) {
 	var event = ev||event;
 	if (this.isdrawing && this.nowStyle == 'no-name') {//大片不规则形状，名字还没想好...
-		this.context.arc(event.pageX - this.canvas.offsetLeft,event.pageY - this.canvas.offsetTop,1,0,2*Math.PI);
+		this.context.arc(event.pageX - this.canvas.offsetLeft,event.pageY - this.canvas.offsetTop,this.nowThickness,0,2*Math.PI);
 		this.context.stroke();
 		this.context.fill();
 	}
